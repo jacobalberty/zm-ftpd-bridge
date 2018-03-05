@@ -47,7 +47,10 @@ module.exports = class monfs {
                  * * use on and settimeout to cancel the event after this._interval, then every time there's an upload reset settimeout
                  */
                 var client = new net.Socket();
-                client.connect(thiz._zmport, this._zmhost, function() {
+                client.on('error', function(err) {
+                    console.log(`Error connecting to ZMTrigger server: ${err}`);
+                } );
+                client.connect(this._zmport, this._zmhost, function() {
                     //console.log('Connected');
                     client.write(tcmd);
                     client.destroy();
