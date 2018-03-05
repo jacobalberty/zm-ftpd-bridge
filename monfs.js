@@ -1,6 +1,6 @@
 const memfs = require('memfs');
 
-module.exports = class camfs {
+module.exports = class monfs {
     constructor() {
         var json = {
             '/motion/' : { },

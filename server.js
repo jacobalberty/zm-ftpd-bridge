@@ -1,7 +1,7 @@
 const fs = require('fs')
     , path = require('path')
     , ftpd = require('ftpd')
-    , camfs = require('./camfs');
+    , monfs = require('./monfs');
 
 var keyFile;
 var certFile;
@@ -71,7 +71,7 @@ server.on('client:connected', function(connection) {
 
   connection.on('command:pass', function(pass, success, failure) {
     if (pass) {
-      success(username, new camfs().fs);
+      success(username, new monfs().fs);
     } else {
       failure();
     }
