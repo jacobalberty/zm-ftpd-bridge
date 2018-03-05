@@ -1,0 +1,27 @@
+{
+  "name": "zm-ftpd-bridge",
+  "version": "0.0.1",
+  "description": "A bridge that takes ftp uploads and turns them into motion commands for ZMTrigger",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jacobalberty/zm-ftpd-bridge.git"
+  },
+  "author": "Jacob Alberty",
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/jacobalberty/zm-ftpd-bridge/issues"
+  },
+  "homepage": "https://github.com/jacobalberty/zm-ftpd-bridge#readme",
+  "devDependencies": {
+    "nodemon": "^1.17.1"
+  },
+  "dependencies": {
+    "ftpd": "^0.2.15",
+    "memfs": "^2.8.0"
+  }
+}
