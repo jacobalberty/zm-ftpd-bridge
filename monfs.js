@@ -1,13 +1,24 @@
 const memfs = require('memfs')
+    , net = require('net')
     , path = require('path');
 
 module.exports = class monfs {
-    constructor() {
+    constructor(options) {
+        var opts ={
+            host: '127.0.0.1', // ZMTrigger host
+            port: 6802, // ZMTrigger port
+            interval: 30, // record for 30 seconds at a time
+        };
         var json = {
             '/motion/' : { },
         };
         this._fs = memfs.Volume.fromJSON(json);
-        this._interval = 30; // Record for 30 seconds
+
+        Object.assign(opts, options);
+        this._interval = opts.interval;
+        this._zmhost = opts.host;
+        this._zmport = opts.port;
+
         this._watch('/motion', function(eventType, filename) {
             if (eventType === 'rename') {
                 var mid = parseInt(path.basename(filename));
@@ -35,6 +46,12 @@ module.exports = class monfs {
                  * * connect to zoneminder port 6802 and send tcmd
                  * * use on and settimeout to cancel the event after this._interval, then every time there's an upload reset settimeout
                  */
+                var client = new net.Socket();
+                client.connect(thiz._zmport, this._zmhost, function() {
+                    //console.log('Connected');
+                    client.write(tcmd);
+                    client.destroy();
+                });
                 this._fs.unlink(filename, function(){});
             }.bind(this));
         }.bind(this);
