@@ -5,11 +5,11 @@ module.exports = class camfs {
         var json = {
             '/motion/' : { },
         };
-        this.camfs = memfs.Volume.fromJSON(json);
+        this._fs = memfs.Volume.fromJSON(json);
     }
 
     get fs() {
-        return this.camfs;
+        return this._fs;
     }
 
     // memfs.fs.watch seems more geared to watching specific files, not entire folders so this provides our watch functionality
@@ -22,10 +22,10 @@ module.exports = class camfs {
         const pollInterval = 300;
         let folderItems = {};
         setInterval(() => {
-            camfs.readdirSync(folderPath)
+            this._fs.readdirSync(folderPath)
             .forEach((file) => {
                 let path = `${folderPath}/${file}`;
-                let lastModification = camfs.statSync(path).mtimeMs;
+                let lastModification = this._fs.statSync(path).mtimeMs;
                 if (!folderItems[file]) {
                     folderItems[file] = lastModification;
                     listener('rename', path);
