@@ -43,8 +43,7 @@ module.exports = class monfs {
                 console.log(tcmd);
                 /**
                  * TODO list
-                 * * connect to zoneminder port 6802 and send tcmd
-                 * * use on and settimeout to cancel the event after this._interval, then every time there's an upload reset settimeout
+                 * ? use on and settimeout to cancel the event after this._interval, then every time there's an upload reset settimeout
                  */
                 var client = new net.Socket();
                 client.on('error', function(err) {
