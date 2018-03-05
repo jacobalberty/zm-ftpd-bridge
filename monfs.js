@@ -54,7 +54,7 @@ module.exports = class monfs {
                     client.write(tcmd);
                     client.destroy();
                 });
-                this._fs.unlink(filename, function(){});
+                setTimeout(function(){this._fs.unlink(filename, function(){})}.bind(this), 5000);
             }.bind(this));
         }.bind(this);
         if (mkdir)
