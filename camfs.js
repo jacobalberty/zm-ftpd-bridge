@@ -6,10 +6,25 @@ module.exports = class camfs {
             '/motion/' : { },
         };
         this._fs = memfs.Volume.fromJSON(json);
+        this._interval = 30; // Record for 30 seconds
     }
 
     get fs() {
         return this._fs;
+    }
+
+    _watchCamera(cam) {
+        var path=`/motion/cam${cam}`
+        this._fs.mkdir(path,function(err) {
+            if (err)
+                return;
+            this._watch(path, function(eventType, filename) {
+                var tcmd = `${cam}|on+${this._interval}|${cam}|External Motion|External Motion`
+                console.log(tcmd);
+                // connect to zoneminder port 6802 and send tcmd
+                this._fs.unlink(filename, function(){});
+            }.bind(this));
+        }.bind(this));
     }
 
     // memfs.fs.watch seems more geared to watching specific files, not entire folders so this provides our watch functionality
