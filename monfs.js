@@ -28,9 +28,13 @@ module.exports = class monfs {
             if (err)
                 return;
             this._watch(path, function(eventType, filename) {
-                var tcmd = `${mid}|on+${this._interval}|${mid}|External Motion|External Motion`
+                var tcmd = `${mid}|on+${this._interval}|1|External Motion|External Motion`
                 console.log(tcmd);
-                // connect to zoneminder port 6802 and send tcmd
+                /**
+                 * TODO list
+                 * * connect to zoneminder port 6802 and send tcmd
+                 * * use on and settimeout to cancel the event after this._interval, then every time there's an upload reset settimeout
+                 */
                 this._fs.unlink(filename, function(){});
             }.bind(this));
         }.bind(this);
