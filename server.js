@@ -12,6 +12,8 @@ var options = {
   tls: null,
 };
 
+var config = JSON.parse(fs.readFileSync('config.json', 'utf-8'));
+
 if (process.env.KEY_FILE && process.env.CERT_FILE) {
   console.log('Running as FTPS server');
   if (process.env.KEY_FILE.charAt(0) !== '/') {
@@ -71,7 +73,7 @@ server.on('client:connected', function(connection) {
 
   connection.on('command:pass', function(pass, success, failure) {
     if (pass) {
-      success(username, new monfs().fs);
+      success(username, new monfs(config.zm).fs);
     } else {
       failure();
     }
