@@ -73,25 +73,26 @@ module.exports = class monfs {
         const pollInterval = 300;
         let folderItems = {};
         setInterval(() => {
-            var forEachfunc = (file) => {
-                let path = `${folderPath}/${file}`;
-                let stats = this._fs.statSync(path);
-                let lastModification = stats.mtimeMs;
-                if (stats.isFile() || !options.recursive === true ) {
-                    if (!folderItems[file]) {
-                        folderItems[file] = lastModification;
-                        listener('rename', path);
-                    } else if (folderItems[file] !== lastModification) {
-                        folderItems[file] = lastModification;
-                        listener('change', path);
-                    }
-                } else if (options.recursive === true && stats.isDirectory() && folderItems[file] !== lastModification) {
-                    folderItems[file] = lastModification;
-                    this._watch(path, options, listener)
-                }
-            };
-            this._fs.readdirSync(folderPath)
-            .forEach(forEachfunc);
+            this._fs.readdir(folderPath, (err, files) => {
+                files.forEach((file) => {
+                    let path = `${folderPath}/${file}`;
+                    this._fs.stat(path, (err, stats) => {
+                        let lastModification = stats.mtimeMs;
+                        if (stats.isFile() || !options.recursive === true ) {
+                            if (!folderItems[file]) {
+                                folderItems[file] = lastModification;
+                                listener('rename', path);
+                            } else if (folderItems[file] !== lastModification) {
+                                folderItems[file] = lastModification;
+                                listener('change', path);
+                            }
+                        } else if (options.recursive === true && stats.isDirectory() && folderItems[file] !== lastModification) {
+                            folderItems[file] = lastModification;
+                            this._watch(path, options, listener)
+                        }
+                    });
+                });
+            });
         }, pollInterval);
     }
 }
