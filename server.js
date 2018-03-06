@@ -83,6 +83,6 @@ server.on('client:connected', function(connection) {
   });
 });
 
-server.debugging = 4;
+server.debugging = 0;
 server.listen(options.port);
 console.log('Listening on port ' + options.port);
