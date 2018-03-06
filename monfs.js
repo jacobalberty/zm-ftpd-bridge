@@ -38,7 +38,7 @@ module.exports = class monfs {
         var monfun = function(err) {
             if (err)
                 return;
-            this._watch(path, function(eventType, filename) {
+            this._watch(path, {recursive: true}, function(eventType, filename) {
                 var tcmd = `${mid}|on+${this._interval}|1|External Motion|External Motion`
                 console.log(tcmd);
                 /**
@@ -67,24 +67,31 @@ module.exports = class monfs {
     _watch(path, options, listener) {
         if (typeof options === 'function') {
             listener = options;
-            options = null;
+            options = { };
         }
         const folderPath = path;
         const pollInterval = 300;
         let folderItems = {};
         setInterval(() => {
-            this._fs.readdirSync(folderPath)
-            .forEach((file) => {
+            var forEachfunc = (file) => {
                 let path = `${folderPath}/${file}`;
-                let lastModification = this._fs.statSync(path).mtimeMs;
-                if (!folderItems[file]) {
+                let stats = this._fs.statSync(path);
+                let lastModification = stats.mtimeMs;
+                if (stats.isFile() || !options.recursive === true ) {
+                    if (!folderItems[file]) {
+                        folderItems[file] = lastModification;
+                        listener('rename', path);
+                    } else if (folderItems[file] !== lastModification) {
+                        folderItems[file] = lastModification;
+                        listener('change', path);
+                    }
+                } else if (options.recursive === true && stats.isDirectory() && folderItems[file] !== lastModification) {
                     folderItems[file] = lastModification;
-                    listener('rename', path);
-                } else if (folderItems[file] !== lastModification) {
-                    folderItems[file] = lastModification;
-                    listener('change', path);
+                    this._watch(path, options, listener)
                 }
-            });
+            };
+            this._fs.readdirSync(folderPath)
+            .forEach(forEachfunc);
         }, pollInterval);
     }
 }
