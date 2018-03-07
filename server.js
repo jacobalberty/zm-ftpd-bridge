@@ -53,7 +53,7 @@ server = new ftpd.FtpServer(options.host, {
   tlsOptions: options.tls,
   allowUnauthorizedTls: true,
   useWriteFile: false,
-  useReadFile: false,
+  useReadFile: true,
   uploadMaxSlurpSize: 7000, // N/A unless 'useWriteFile' is true.
 });
 

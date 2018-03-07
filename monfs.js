@@ -8,28 +8,50 @@ module.exports = class monfs {
             host: '127.0.0.1', // ZMTrigger host
             port: 6802, // ZMTrigger port
             interval: 30, // record for 30 seconds at a time
+            monitors: { },
         };
         var json = {
             '/motion/' : { },
         };
-        this._fs = memfs.Volume.fromJSON(json);
 
         Object.assign(opts, options);
-        this._interval = opts.interval;
-        this._zmhost = opts.host;
-        this._zmport = opts.port;
+        this._settings = opts;
+
+        Object.keys(opts.monitors).forEach((key) => {
+            json[`/motion/${key}.json`] = JSON.stringify(opts.monitors[key], null, ' ');
+            json[`/motion/${key}`] = { };
+        });
+
+        this._fs = memfs.Volume.fromJSON(json);
 
         this._watch('/motion', function(eventType, filename) {
-            if (eventType === 'rename') {
-                var mid = parseInt(path.basename(filename));
-                if (!isNaN(mid))
-                    this._watchMonitor(mid, false);
-            }
+            var stats = this._fs.stat(filename, (err, stats) => {
+                if (path.extname(filename) === '.json') {
+                    var mid = parseInt(path.basename(filename, '.json'));
+                    if (!isNaN(mid))
+                        this._settings.monitors[mid] = JSON.parse(this._fs.readFileSync(filename, 'utf-8'))
+                }
+                if (eventType === 'rename' && stats.isDirectory()) {
+                    var mid = parseInt(path.basename(filename));
+                    if (!isNaN(mid))
+                        this._watchMonitor(mid, false);
+                }
+            });
         }.bind(this));
     }
 
     get fs() {
         return this._fs;
+    }
+
+    get settings() {
+        return this._settings;
+    }
+
+    monSettings(mid) {
+        var setClone = Object.assign({}, this._settings);
+        delete setClone.monitors;
+        return Object.assign({}, setClone, this._settings.monitors[mid]);
     }
 
     _watchMonitor(mid, mkdir = true) {
@@ -39,17 +61,18 @@ module.exports = class monfs {
             if (err)
                 return;
             this._watch(path, {recursive: true}, function(eventType, filename) {
-                var tcmd = `${mid}|on+${this._interval}|1|External Motion|External Motion`
+                var settings = this.monSettings(mid);
+                var tcmd = `${mid}|on+${settings.interval}|1|External Motion|External Motion`
                 console.log(tcmd);
                 /**
                  * TODO list
-                 * ? use on and settimeout to cancel the event after this._interval, then every time there's an upload reset settimeout
+                 * ? use on and settimeout to cancel the event after settings.interval, then every time there's an upload reset settimeout
                  */
                 var client = new net.Socket();
                 client.on('error', function(err) {
                     console.log(`Error connecting to ZMTrigger server: ${err}`);
                 } );
-                client.connect(this._zmport, this._zmhost, function() {
+                client.connect(settings.port, settings.host, function() {
                     //console.log('Connected');
                     client.write(tcmd);
                     client.destroy();
@@ -74,9 +97,13 @@ module.exports = class monfs {
         let folderItems = {};
         setInterval(() => {
             this._fs.readdir(folderPath, (err, files) => {
+                if (err)
+                    return;
                 files.forEach((file) => {
                     let path = `${folderPath}/${file}`;
                     this._fs.stat(path, (err, stats) => {
+                        if (stats === undefined)
+                            console.log(err);
                         let lastModification = stats.mtimeMs;
                         if (stats.isFile() || !options.recursive === true ) {
                             if (!folderItems[file]) {
