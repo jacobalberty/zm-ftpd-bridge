@@ -62,6 +62,14 @@ server.on('error', function(error) {
 });
 
 var myfs = new monfs(config.zm);
+
+setInterval(function() {
+    config.zm = myfs.settings
+    fs.writeFile('config.json', JSON.stringify(config, null, ' '), (err) => {
+        if (err) throw err;
+    });
+}, 15000);
+
 server.on('client:connected', function(connection) {
   var username = null;
   console.log('client connected: ' + connection.remoteAddress);
