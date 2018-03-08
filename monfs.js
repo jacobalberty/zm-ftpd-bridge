@@ -1,8 +1,8 @@
 const EventEmitter = require('events')
     , memfs = require('memfs')
     , net = require('net')
-    , path = require('path');
-
+    , path = require('path')
+    , ZoneMinder = require('zoneminder');
 module.exports = class monfs extends EventEmitter {
     constructor(options) {
         super();
@@ -96,17 +96,30 @@ module.exports = class monfs extends EventEmitter {
         switch (settings.type) {
              case 'zmapi':
                 var tof = () => {
-                        delete this._zmapito[key];
+                        this._zmapi[key].zm.alarm(key, 'off', (err) => {
+                            if (err) console.log(err);
+                        });
+                        delete this._zmapi[key];
                         console.log(`canceling: ${key}`)
                 };
-                if (!Array.isArray(this._zmapito)) this._zmapito = [];
-                if (this._zmapito[key]) {
+                if (!Array.isArray(this._zmapi)) this._zmapi = [ ];
+                if (this._zmapi[key]) {
                     console.log(`refreshing: ${key}`)
-                    clearTimeout(this._zmapito[key]);
-                    this._zmapito[key] = setTimeout(tof, settings.interval*1000);
+                    clearTimeout(this._zmapi[key].to);
+                    this._zmapi[key].to = setTimeout(tof, settings.interval*1000);
                 } else {
+                    var zmapi = {
+                        zm: new ZoneMinder(settings.login),
+                    };
+                    this._zmapi[key] = zmapi;
+                    zmapi.zm.alarm(settings.mid, 'on', function(err, res) {
+                        if (err) {
+                            console.log(err);
+                            return;
+                        }
+                        this._zmapi[key].to = setTimeout(tof, settings.interval*1000)
+                    }.bind(this));
                     console.log(`starting: ${key}`);
-                    this._zmapito[key] = setTimeout(tof, settings.interval*1000);
                }
                 break;
             case 'test':

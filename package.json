@@ -8,7 +8,9 @@
     "start": "nodemon init.js"
   },
   "nodemonConfig": {
-    "ignore": ["config.json"],
+    "ignore": [
+      "config.json"
+    ],
     "delay": "2500"
   },
   "repository": {
@@ -26,6 +28,7 @@
   },
   "dependencies": {
     "ftpd": "git+https://github.com/nodeftpd/nodeftpd.git",
-    "memfs": "^2.8.0"
+    "memfs": "^2.8.0",
+    "zoneminder": "^1.0.3"
   }
 }
