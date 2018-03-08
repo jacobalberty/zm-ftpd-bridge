@@ -24,7 +24,20 @@ module.exports = class monfs extends EventEmitter {
         });
 
         this._fs = memfs.Volume.fromJSON(json);
-
+        this._fs.readdir('/motion', (err, files) => {
+            if (err)
+                return;
+            files.forEach((file) => {
+                this._fs.stat(`/motion/${file}`, (err, stats) => {
+                    if (err) throw err;
+                    if (stats.isDirectory()) {
+                        var mid = parseInt(file);
+                        if (!isNaN(mid))
+                            this._watchMonitor(mid, false);
+                    }
+                });
+            });
+        });
         this._watch('/motion', function(eventType, filename) {
             var stats = this._fs.stat(filename, (err, stats) => {
                 if (path.extname(filename) === '.json') {
@@ -98,6 +111,28 @@ module.exports = class monfs extends EventEmitter {
         const folderPath = path;
         const pollInterval = 300;
         let folderItems = {};
+        this._fs.readdir(folderPath, (err, files) => {
+            if (err)
+                return;
+            files.forEach((file) => {
+                let path = `${folderPath}/${file}`;
+                this._fs.stat(path, (err, stats) => {
+                    if (stats === undefined)
+                        console.log(err);
+                    let lastModification = stats.mtimeMs;
+                    if (stats.isFile() || !options.recursive === true ) {
+                        if (!folderItems[file]) {
+                            folderItems[file] = lastModification;
+                        } else if (folderItems[file] !== lastModification) {
+                            folderItems[file] = lastModification;
+                        }
+                    } else if (options.recursive === true && stats.isDirectory() && folderItems[file] !== lastModification) {
+                        folderItems[file] = lastModification;
+                        this._watch(path, options, listener)
+                    }
+                });
+            });
+        });
         setInterval(() => {
             this._fs.readdir(folderPath, (err, files) => {
                 if (err)
