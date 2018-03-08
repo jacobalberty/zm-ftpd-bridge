@@ -44,6 +44,7 @@ module.exports = class monfs extends EventEmitter {
                     var mid = parseInt(path.basename(filename, '.json'));
                     if (!isNaN(mid)) {
                         this._settings.monitors[mid] = JSON.parse(this._fs.readFileSync(filename, 'utf-8'));
+                        if (this._settings.monitors[mid].mid === undefined) this._settings.monitors[mid].mid = mid;
                         this.emit('config:change');
                     }
                 }
@@ -78,21 +79,10 @@ module.exports = class monfs extends EventEmitter {
                 return;
             this._watch(path, {recursive: true}, function(eventType, filename) {
                 var settings = this.monSettings(mid);
-                var tcmd = `${mid}|on+${settings.interval}|1|External Motion|External Motion`
-                console.log(tcmd);
-                /**
-                 * TODO list
-                 * ? use on and settimeout to cancel the event after settings.interval, then every time there's an upload reset settimeout
-                 */
-                var client = new net.Socket();
-                client.on('error', function(err) {
-                    console.log(`Error connecting to ZMTrigger server: ${err}`);
-                } );
-                client.connect(settings.port, settings.host, function() {
-                    //console.log('Connected');
-                    client.write(tcmd);
-                    client.destroy();
-                });
+                if (settings.mid === undefined) {
+                    settings.mid = mid;
+                }
+                this._startEvent(settings);
                 setTimeout(function(){this._fs.unlink(filename, function(){})}.bind(this), 5000);
             }.bind(this));
         }.bind(this);
@@ -102,6 +92,23 @@ module.exports = class monfs extends EventEmitter {
             monfun();
     }
 
+    _startEvent(settings) {
+        var tcmd = `${settings.mid}|on+${settings.interval}|1|External Motion|External Motion`
+
+        /**
+         * TODO list
+         * ? use on and settimeout to cancel the event after settings.interval, then every time there's an upload reset settimeout
+         */
+        var client = new net.Socket();
+        client.on('error', function(err) {
+            console.log(`Error connecting to ZMTrigger server: ${err}`);
+        } );
+        client.connect(settings.port, settings.host, function() {
+            //console.log('Connected');
+            client.write(tcmd);
+            client.destroy();
+        });
+    }
     // memfs.fs.watch seems more geared to watching specific files, not entire folders so this provides our watch functionality
     _watch(path, options, listener) {
         if (typeof options === 'function') {
