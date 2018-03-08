@@ -94,6 +94,21 @@ module.exports = class monfs extends EventEmitter {
 
     _startEvent(key, settings) {
         switch (settings.type) {
+             case 'zmapi':
+                var tof = () => {
+                        delete this._zmapito[key];
+                        console.log(`canceling: ${key}`)
+                };
+                if (!Array.isArray(this._zmapito)) this._zmapito = [];
+                if (this._zmapito[key]) {
+                    console.log(`refreshing: ${key}`)
+                    clearTimeout(this._zmapito[key]);
+                    this._zmapito[key] = setTimeout(tof, settings.interval*1000);
+                } else {
+                    console.log(`starting: ${key}`);
+                    this._zmapito[key] = setTimeout(tof, settings.interval*1000);
+               }
+                break;
             case 'test':
                 console.log(JSON.stringify(settings, null, ' '));
                 break;
