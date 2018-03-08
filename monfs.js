@@ -1,9 +1,11 @@
-const memfs = require('memfs')
+const EventEmitter = require('events')
+    , memfs = require('memfs')
     , net = require('net')
     , path = require('path');
 
-module.exports = class monfs {
+module.exports = class monfs extends EventEmitter {
     constructor(options) {
+        super();
         var opts ={
             host: '127.0.0.1', // ZMTrigger host
             port: 6802, // ZMTrigger port
@@ -14,8 +16,7 @@ module.exports = class monfs {
             '/motion/' : { },
         };
 
-        Object.assign(opts, options);
-        this._settings = opts;
+        this._settings = Object.assign(opts, options);
 
         Object.keys(opts.monitors).forEach((key) => {
             json[`/motion/${key}.json`] = JSON.stringify(opts.monitors[key], null, ' ');
@@ -28,8 +29,10 @@ module.exports = class monfs {
             var stats = this._fs.stat(filename, (err, stats) => {
                 if (path.extname(filename) === '.json') {
                     var mid = parseInt(path.basename(filename, '.json'));
-                    if (!isNaN(mid))
-                        this._settings.monitors[mid] = JSON.parse(this._fs.readFileSync(filename, 'utf-8'))
+                    if (!isNaN(mid)) {
+                        this._settings.monitors[mid] = JSON.parse(this._fs.readFileSync(filename, 'utf-8'));
+                        this.emit('config:change');
+                    }
                 }
                 if (eventType === 'rename' && stats.isDirectory()) {
                     var mid = parseInt(path.basename(filename));
