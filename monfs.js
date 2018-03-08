@@ -93,22 +93,29 @@ module.exports = class monfs extends EventEmitter {
     }
 
     _startEvent(settings) {
-        var tcmd = `${settings.mid}|on+${settings.interval}|1|External Motion|External Motion`
+        switch (settings.type) {
+            case 'test':
+                console.log(JSON.stringify(settings, null, ' '));
+                break;
+            default:
+                var tcmd = `${settings.mid}|on+${settings.interval}|1|External Motion|External Motion`
 
-        /**
-         * TODO list
-         * ? use on and settimeout to cancel the event after settings.interval, then every time there's an upload reset settimeout
-         */
-        var client = new net.Socket();
-        client.on('error', function(err) {
-            console.log(`Error connecting to ZMTrigger server: ${err}`);
-        } );
-        client.connect(settings.port, settings.host, function() {
-            //console.log('Connected');
-            client.write(tcmd);
-            client.destroy();
-        });
+                /**
+                 * TODO list
+                 * ? use on and settimeout to cancel the event after settings.interval, then every time there's an upload reset settimeout
+                 */
+                var client = new net.Socket();
+                client.on('error', function(err) {
+                    console.log(`Error connecting to ZMTrigger server: ${err}`);
+                } );
+                client.connect(settings.port, settings.host, function() {
+                    //console.log('Connected');
+                    client.write(tcmd);
+                    client.destroy();
+                });
+        }
     }
+
     // memfs.fs.watch seems more geared to watching specific files, not entire folders so this provides our watch functionality
     _watch(path, options, listener) {
         if (typeof options === 'function') {
