@@ -82,7 +82,7 @@ module.exports = class monfs extends EventEmitter {
                 if (settings.mid === undefined) {
                     settings.mid = mid;
                 }
-                this._startEvent(settings);
+               this._startEvent(mid, settings);
                 setTimeout(function(){this._fs.unlink(filename, function(){})}.bind(this), 5000);
             }.bind(this));
         }.bind(this);
@@ -92,11 +92,12 @@ module.exports = class monfs extends EventEmitter {
             monfun();
     }
 
-    _startEvent(settings) {
+    _startEvent(key, settings) {
         switch (settings.type) {
             case 'test':
                 console.log(JSON.stringify(settings, null, ' '));
                 break;
+            case 'zmtrigger':
             default:
                 var tcmd = `${settings.mid}|on+${settings.interval}|1|External Motion|External Motion`
 
