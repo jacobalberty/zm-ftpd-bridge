@@ -96,6 +96,11 @@ module.exports = class monfs extends EventEmitter {
         switch (settings.type) {
              case 'zmapi':
                 var tof = () => {
+                        if (!this._zmapi[key]) {
+                            console.log(key);
+                            console.log(this._zmapi);
+                            return;
+                        }
                         this._zmapi[key].zm.alarm(key, 'off', (err) => {
                             if (err) console.log(err);
                         });
@@ -103,7 +108,7 @@ module.exports = class monfs extends EventEmitter {
                         console.log(`canceling: ${key}`)
                 };
                 if (!Array.isArray(this._zmapi)) this._zmapi = [ ];
-                if (this._zmapi[key]) {
+                if (this._zmapi[key] !== undefined) {
                     console.log(`refreshing: ${key}`)
                     clearTimeout(this._zmapi[key].to);
                     this._zmapi[key].to = setTimeout(tof, settings.interval*1000);
@@ -111,13 +116,13 @@ module.exports = class monfs extends EventEmitter {
                     var zmapi = {
                         zm: new ZoneMinder(settings.login),
                     };
-                    this._zmapi[key] = zmapi;
                     zmapi.zm.alarm(settings.mid, 'on', function(err, res) {
                         if (err) {
                             console.log(err);
                             return;
                         }
-                        this._zmapi[key].to = setTimeout(tof, settings.interval*1000)
+                        zmapi.to = setTimeout(tof, settings.interval*1000)
+                        this._zmapi[key] = zmapi
                     }.bind(this));
                     console.log(`starting: ${key}`);
                }
