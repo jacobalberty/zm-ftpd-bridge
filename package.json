@@ -29,6 +29,6 @@
   "dependencies": {
     "ftpd": "git+https://github.com/nodeftpd/nodeftpd.git",
     "memfs": "^2.8.0",
-    "zoneminder": "^1.0.4"
+    "zoneminder": "^2.0.0"
   }
 }
